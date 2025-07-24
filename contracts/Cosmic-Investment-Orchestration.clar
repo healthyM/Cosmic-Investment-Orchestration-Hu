@@ -243,31 +243,8 @@
   )
 )
 
-;; Treasury management authority transfer with comprehensive security validation
-(define-public (transfer-treasury-management (allocation-id uint) (new-manager principal))
-  (let
-    (
-      (current-allocation-record (unwrap! (map-get? treasury-distribution-vault { allocation-id: allocation-id })
-        asset-allocation-missing))
-    )
-    ;; Rigorous ownership verification before management transfer execution
-    (asserts! (validate-allocation-exists allocation-id) asset-allocation-missing)
-    (asserts! (is-eq (get treasury-manager current-allocation-record) tx-sender) allocation-authority-failed)
 
-    ;; Execute secure management transfer with updated authority information
-    (map-set treasury-distribution-vault
-      { allocation-id: allocation-id }
-      (merge current-allocation-record { treasury-manager: new-manager })
-    )
 
-    ;; Transfer highest permission level to new manager
-    (map-set treasury-access-registry
-      { allocation-id: allocation-id, accessor-principal: new-manager }
-      { permission-level: u100 }
-    )
-    (ok true)
-  )
-)
 
 ;; Performance metrics update system for tracking allocation effectiveness
 (define-public (update-performance-metrics
@@ -302,26 +279,7 @@
   )
 )
 
-;; Permission management system for treasury access control
-(define-public (grant-treasury-access (allocation-id uint) (accessor principal) (permission-level uint))
-  (let
-    (
-      (allocation-data (unwrap! (map-get? treasury-distribution-vault { allocation-id: allocation-id })
-        asset-allocation-missing))
-    )
-    ;; Verify management authority and validate permission parameters
-    (asserts! (validate-allocation-exists allocation-id) asset-allocation-missing)
-    (asserts! (is-eq (get treasury-manager allocation-data) tx-sender) allocation-authority-failed)
-    (asserts! (<= permission-level u100) distribution-parameters-invalid)
 
-    ;; Grant specified permission level to accessor
-    (map-set treasury-access-registry
-      { allocation-id: allocation-id, accessor-principal: accessor }
-      { permission-level: permission-level }
-    )
-    (ok true)
-  )
-)
 
 ;; Permanent treasury allocation removal with comprehensive security protocols
 (define-public (dissolve-treasury-allocation (allocation-id uint))
